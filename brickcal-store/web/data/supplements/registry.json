@@ -1,0 +1,9 @@
+{
+  "countries": [
+    {
+      "code": "CN",
+      "source": "holiday-cn",
+      "enabled": true
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>砖历 · 设置</title>
+    <link rel="stylesheet" href="popup.css" />
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body class="options-page">
+    <header class="popup-head">
+      <b>设置</b>
+      <span class="home-chip">砖历</span>
+    </header>
+    <p class="hint">假期与调休来自公开源（caldays.com，CC BY 4.0；中国调休补充 holiday-cn），仅供浏览参考，以各国官方通知为准。设置只存在本机/浏览器同步，不会上传到砖历服务器。</p>
+    <section class="opt-block">
+      <div class="opt-inline">
+        <label class="opt-field" for="workStart">
+          上班
+          <input id="workStart" type="time" />
+        </label>
+        <label class="opt-field" for="workEnd">
+          下班
+          <input id="workEnd" type="time" />
+        </label>
+      </div>
+      <div class="opt-inline">
+        <label class="opt-field" for="lunchStart">
+          午休开始
+          <input id="lunchStart" type="time" />
+        </label>
+        <label class="opt-field" for="lunchMinutes">
+          时长（分钟）
+          <input id="lunchMinutes" type="number" min="0" max="240" step="15" />
+        </label>
+      </div>
+      <label for="workColor">上班开始时的背景色</label>
+      <div class="color-row">
+        <input id="workColor" type="color" value="#ff8a2b" />
+        <span id="workColorText">#ff8a2b</span>
+      </div>
+      <div class="color-preview" id="colorPreview" aria-hidden="true"></div>
+    </section>
+    <section class="opt-block">
+      <label for="homeSelect">主日历国家</label>
+      <select id="homeSelect"></select>
+      <label for="weekStart">每周起始日</label>
+      <select id="weekStart">
+        <option value="sun">周日</option>
+        <option value="mon">周一</option>
+      </select>
+      <label for="monthSwitch">日历自动切换</label>
+      <select id="monthSwitch">
+        <option value="dblclick">双击</option>
+        <option value="click">单击</option>
+      </select>
+    </section>
+    <section class="opt-block">
+      <label for="brickLabel">砖块文字</label>
+      <input id="brickLabel" type="text" maxlength="4" placeholder="砖" />
+      <p class="hint tight">最多 2 个字，画在掉落的砖块上。</p>
+      <div class="clear-row">
+        <button type="button" id="clearBricks">清砖</button>
+        <span class="clear-stat" id="clearStat">今天已清 0 次</span>
+      </div>
+    </section>
+    <p class="save-msg" id="saveMsg" hidden>已保存</p>
+    <script src="zh-names.js"></script>
+    <script src="holiday.js"></script>
+    <script src="work-copy.js"></script>
+    <script src="brick-fall.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

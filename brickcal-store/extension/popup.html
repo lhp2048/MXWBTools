@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="board">
+      <div class="main">
+        <p id="yearNote" hidden></p>
+        <section class="cal">
+          <div class="cal-nav">
+            <button type="button" id="calPrev">‹</button>
+            <div class="t" id="calTitle"></div>
+            <button type="button" id="calNext">›</button>
+            <button type="button" id="calToday">今</button>
+            <div class="rest-wrap">
+              <button type="button" id="calRest" aria-expanded="false" aria-haspopup="true">休</button>
+              <div class="rest-menu" id="restMenu" hidden></div>
+            </div>
+            <button type="button" id="setBtn">设置</button>
+          </div>
+          <div class="grid" id="calGrid"></div>
+        </section>
+        <section class="hint">
+          <p class="next-holidays" id="nextHolidays">假期加载中…</p>
+          <h2 id="worldTitle">正在加载休假信息</h2>
+          <div class="world-scroll" id="worldList"></div>
+          <button type="button" class="more-btn" id="worldMore" hidden>更多</button>
+        </section>
+      </div>
+      <aside class="work-rail" id="workRail">
+        <div class="work-panel" id="workPanel">
+          <canvas class="brick-layer" id="brickCanvas" aria-hidden="true"></canvas>
+          <div class="work-panel-ui">
+          <section class="day-head">
+            <div class="day-when">
+              <div class="k" id="heroDate"></div>
+              <div class="hero-lunar" id="heroLunar" hidden></div>
+            </div>
+            <span class="home-chip" id="homeChip">主日历：中国</span>
+          </section>
+          <p class="work-slogan" id="workSlogan">努力奋斗，为公司创造价值</p>
+          <div class="work-ring-wrap">
+            <div class="work-overtime" id="workOvertime">
+              <svg class="work-over-svg" viewBox="0 0 228 228" aria-hidden="true">
+                <circle class="work-over-track" cx="114" cy="114" r="106" />
+                <circle class="work-over-progress" id="workOverArc" cx="114" cy="114" r="106" transform="rotate(-90 114 114)" stroke-dasharray="0 666" />
+              </svg>
+              <div class="work-ring" id="workRing">
+                <svg class="work-ring-svg" viewBox="0 0 196 196" aria-hidden="true">
+                  <circle class="work-ring-track" cx="98" cy="98" r="88" />
+                  <circle class="work-ring-progress" id="workRingArc" cx="98" cy="98" r="88" transform="rotate(-90 98 98)" stroke-dasharray="0 553" />
+                </svg>
+                <div class="work-ring-core">
+                  <strong class="ring-status" id="heroStatus">今天上班</strong>
+                  <b id="workTimer">00:00:00</b>
+                  <small id="workLabel">已搬砖时长</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="work-quote" id="workQuote">老板说“格局打开”，意思是少要钱多干活。</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="work-toast" id="workToast" hidden></div>
+    <div class="day-tip" id="dayTip" hidden aria-hidden="true"></div>
+    <div class="world-layer" id="worldLayer" hidden>
+      <div class="world-sheet" id="worldSheet" role="dialog" aria-modal="true">
+        <div class="world-sheet-head" id="worldSheetTitle">休假国家</div>
+        <div class="world-sheet-list" id="worldSheetList"></div>
+      </div>
+    </div>
+    <script src="zh-names.js"></script>
+    <script src="holiday.js"></script>
+    <script src="work-copy.js"></script>
+    <script src="brick-fall.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

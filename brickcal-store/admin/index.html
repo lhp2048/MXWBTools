@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>砖历维护台</title>
+    <style>
+      :root {
+        --bg: #10141c;
+        --card: #1a2230;
+        --ink: #f4f1ea;
+        --muted: #9aa3b2;
+        --line: #2a3344;
+        --accent: #f0b429;
+        --ok: #5ee0a8;
+        --warn: #f07178;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      main {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 20px 16px var(--dock-space, 88px);
+      }
+      .muted { color: var(--muted); }
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin: 0 0 16px;
+      }
+      .preview-fab {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 64px;
+        height: 36px;
+        padding: 0 16px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #1a1408;
+        font-weight: 700;
+        text-decoration: none;
+        flex: 0 0 auto;
+      }
+      .status-dock {
+        position: fixed;
+        left: 50%;
+        bottom: 16px;
+        transform: translateX(-50%);
+        z-index: 20;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 18px;
+        align-items: center;
+        justify-content: center;
+        max-width: calc(100% - 32px);
+        padding: 10px 18px;
+        background: rgba(26, 34, 48, 0.94);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+      .status-dock strong { color: var(--accent); }
+      .status-dock .ok { color: var(--ok); }
+      .tabs {
+        display: flex;
+        gap: 6px;
+        margin: 0;
+        padding: 4px;
+        width: fit-content;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+      }
+      .tab {
+        background: transparent;
+        color: var(--muted);
+        padding: 8px 16px;
+        font-weight: 650;
+      }
+      .tab.active {
+        background: var(--accent);
+        color: #1a1408;
+      }
+      .panel { display: none; }
+      .panel.active { display: block; }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        margin: 16px 0 12px;
+        padding: 14px 16px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+      }
+      button {
+        background: var(--accent);
+        color: #1a1408;
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button.secondary { background: #2d3a4f; color: var(--ink); }
+      button:disabled { opacity: 0.55; cursor: default; }
+      .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.82rem; color: var(--muted); margin: 8px 0 14px; }
+      .legend label { display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer; color: var(--muted); }
+      .legend input { width: auto; margin: 0; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+        gap: 8px;
+      }
+      .tile {
+        position: relative;
+        min-height: 72px;
+        border-radius: 10px;
+        padding: 8px 8px 10px;
+        color: #fff;
+        cursor: default;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+      }
+      .tile .icon { position: absolute; top: 6px; right: 7px; font-size: 12px; }
+      .tile .zh { display: block; font-size: 0.86rem; font-weight: 700; line-height: 1.25; padding-right: 16px; }
+      .tile .code { display: block; margin-top: 4px; font-size: 0.7rem; opacity: 0.8; }
+      .tile .tip {
+        display: none;
+        position: absolute;
+        z-index: 5;
+        left: 0;
+        top: calc(100% + 8px);
+        bottom: auto;
+        width: 220px;
+        padding: 10px 12px;
+        background: #0c1118;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        color: var(--ink);
+        font-size: 0.8rem;
+        line-height: 1.45;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      }
+      .tile:hover .tip { display: block; }
+      .row { display: flex; gap: 12px; flex-wrap: wrap; margin: 18px 0 10px; }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 14px;
+        flex: 1 1 180px;
+      }
+      label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; }
+      input {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #10141c;
+        color: var(--ink);
+      }
+      pre {
+        background: #0b1220;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        min-height: 140px;
+        max-height: 240px;
+        overflow: auto;
+        white-space: pre-wrap;
+      }
+      .sup-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+      .sup-table th, .sup-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+      .sup-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; margin-top: 12px; }
+      .sup-form .field { flex: 1 1 120px; }
+      .sup-form select {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #10141c;
+        color: var(--ink);
+      }
+      .empty-grid { color: var(--muted); padding: 24px 0; }
+      h2 { margin: 22px 0 8px; font-size: 1.1rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="topbar">
+        <div class="tabs" role="tablist">
+          <button class="tab active" type="button" data-tab="overview" role="tab" aria-selected="true">总览</button>
+          <button class="tab" type="button" data-tab="update" role="tab" aria-selected="false">数据更新</button>
+        </div>
+        <a class="preview-fab" href="/" target="_blank">预览</a>
+      </div>
+
+      <section id="panel-overview" class="panel active" role="tabpanel">
+        <div class="legend">
+          <label><input id="filter-resting" type="checkbox" checked /> ☀ 正在休假</label>
+          <label><input id="filter-ok" type="checkbox" checked /> ✓ 已有假期</label>
+          <label><input id="filter-empty" type="checkbox" checked /> ○ 无假期条目</label>
+          <label><input id="filter-failed" type="checkbox" checked /> ! 拉取失败</label>
+        </div>
+        <div id="countriesGrid" class="grid"></div>
+      </section>
+
+      <section id="panel-update" class="panel" role="tabpanel">
+        <h2>调休补充列表</h2>
+        <p class="muted">更新补充只会拉取这份列表里已启用的国家，并与 caldays 合并。调休日会带原因标记。</p>
+        <div class="card" style="margin-top: 10px; margin-bottom: 16px;">
+          <table class="sup-table">
+            <thead>
+              <tr>
+                <th>国家</th>
+                <th>数据源</th>
+                <th>状态</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="supplementRows" class="js-sup-rows"></tbody>
+          </table>
+          <div class="sup-form">
+            <div class="field">
+              <label for="supCode">国家代码</label>
+              <input id="supCode" class="js-sup-code" maxlength="2" placeholder="CN" />
+            </div>
+            <div class="field">
+              <label for="supSource">数据源</label>
+              <select id="supSource" class="js-sup-source"></select>
+            </div>
+            <button id="supAddBtn" class="js-sup-add" type="button">加入列表</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <div>
+            <button id="ingestBtn" type="button">手动获取一次</button>
+            <button id="supplementBtn" class="secondary" type="button">更新补充</button>
+            <button id="packBtn" class="secondary" type="button">打包静态站</button>
+          </div>
+        </div>
+        <p id="packResult" class="muted"></p>
+        <div class="row">
+          <div class="card">
+            <label for="delayMs">请求间隔（毫秒）</label>
+            <input id="delayMs" type="number" value="400" min="200" />
+          </div>
+          <div class="card">
+            <label for="limit">国家上限（空=全部）</label>
+            <input id="limit" type="number" min="1" placeholder="例如 5 做试拉" />
+          </div>
+        </div>
+        <pre id="log">等待操作…</pre>
+      </section>
+    </main>
+    <div class="status-dock" id="statusDock">
+      <span>数据更新于 <strong id="updatedAt">—</strong></span>
+      <span id="jobStatus">任务：idle</span>
+    </div>
+    <script src="/admin/app.js"></script>
+  </body>
+</html>

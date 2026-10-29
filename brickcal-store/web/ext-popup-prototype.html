@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>砖历 · 扩展弹窗原型</title>
+    <style>
+      :root {
+        --bg: #efe7d8;
+        --ink: #241c14;
+        --muted: #6f6256;
+        --paper: #fffaf1;
+        --line: #e4d5c1;
+        --accent: #c45c26;
+        --accent-2: #2f6f5e;
+        --weekend: #d94b4b;
+        --work: #c45c26;
+        --rest: #2f6f5e;
+        --chrome: #3c3c3c;
+        --popup-w: 360px;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; min-height: 100%; }
+      body {
+        color: var(--ink);
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: #cfc4b4;
+      }
+      .stage {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 28px 20px 48px;
+      }
+      .intro {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      .intro h1 {
+        margin: 0 0 6px;
+        font-size: 1.25rem;
+      }
+      .intro p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        max-width: 560px;
+      }
+      .scheme-switch {
+        display: flex;
+        gap: 6px;
+        background: #fffaf1;
+        padding: 4px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+      }
+      .scheme-switch button {
+        border: 0;
+        background: transparent;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 650;
+        color: var(--muted);
+      }
+      .scheme-switch button.on {
+        background: var(--ink);
+        color: #fffaf1;
+      }
+      .browser {
+        background: #ece6db;
+        border-radius: 12px;
+        border: 1px solid #d3c6b4;
+        overflow: hidden;
+      }
+      .toolbar {
+        height: 44px;
+        background: #f6f0e6;
+        border-bottom: 1px solid #e0d3c2;
+        display: flex;
+        align-items: center;
+        padding: 0 12px 0 16px;
+        gap: 10px;
+      }
+      .dots { display: flex; gap: 6px; }
+      .dots i { width: 10px; height: 10px; border-radius: 50%; background: #d8cbb8; display: block; }
+      .omnibox {
+        flex: 1;
+        height: 26px;
+        border-radius: 13px;
+        background: #fff;
+        border: 1px solid #e4d5c1;
+        color: #8a7b6d;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+      }
+      .ext-slot {
+        position: relative;
+        width: 32px;
+        height: 32px;
+      }
+      .ext-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: var(--accent);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 11px;
+        font-weight: 800;
+        cursor: pointer;
+        border: 0;
+      }
+      .badge {
+        position: absolute;
+        top: -3px;
+        right: -4px;
+        min-width: 16px;
+        height: 16px;
+        padding: 0 4px;
+        border-radius: 99px;
+        background: #d94b4b;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 800;
+        display: grid;
+        place-items: center;
+      }
+      .page-fake {
+        min-height: 560px;
+        background: linear-gradient(#f3ece1, #e8ddd0);
+        padding: 18px 20px;
+        color: #8d7e70;
+        font-size: 13px;
+      }
+      .popup-wrap {
+        position: relative;
+        height: 0;
+      }
+      .popup {
+        position: absolute;
+        top: -8px;
+        right: 18px;
+        width: var(--popup-w);
+        background: var(--bg);
+        border: 1px solid #d7c8b4;
+        border-radius: 14px;
+        overflow: hidden;
+        z-index: 2;
+      }
+      .popup-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 12px 8px;
+      }
+      .popup-head b { font-size: 0.95rem; }
+      .home-chip {
+        font-size: 12px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 99px;
+        padding: 3px 8px;
+        color: var(--muted);
+      }
+      .hero {
+        margin: 0 12px 10px;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .hero .k { font-size: 12px; color: var(--muted); }
+      .hero .v {
+        margin-top: 2px;
+        font-size: 1.35rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+      }
+      .hero.rest .v { color: var(--rest); }
+      .hero.work .v { color: var(--work); }
+      .chips {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .chip {
+        background: #f7efe3;
+        border-radius: 10px;
+        padding: 8px 10px;
+      }
+      .chip small { display: block; color: var(--muted); font-size: 11px; }
+      .chip b { font-size: 0.95rem; }
+      .cal {
+        margin: 0 12px 10px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 8px 8px 6px;
+      }
+      .cal-nav {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 4px 6px;
+      }
+      .cal-nav button {
+        width: 26px;
+        height: 26px;
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 7px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .cal-nav .t { flex: 1; text-align: center; font-weight: 750; font-size: 0.9rem; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+      }
+      .dow, .cell {
+        text-align: center;
+        font-size: 11px;
+        padding: 4px 0;
+      }
+      .dow { color: var(--muted); }
+      .dow.wk, .cell.wk { color: var(--weekend); }
+      .cell {
+        border: 0;
+        background: transparent;
+        border-radius: 8px;
+        cursor: pointer;
+        min-height: 32px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1px;
+      }
+      .cell .n { font-size: 12px; font-weight: 650; }
+      .cell .s { font-size: 9px; color: var(--muted); line-height: 1; }
+      .cell.out { opacity: 0.34; }
+      .cell.fest .s { color: var(--accent); font-weight: 700; }
+      .cell.shift { background: #f6e4d4; }
+      .cell.shift .s { color: var(--accent); }
+      .cell.on { box-shadow: inset 0 0 0 2px #4c8dff; }
+      .world {
+        margin: 0 12px 10px;
+      }
+      .world h2 {
+        margin: 0 2px 8px;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 650;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 10px;
+        margin-bottom: 6px;
+      }
+      .flag {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: #efe0cc;
+        display: grid;
+        place-items: center;
+        font-size: 10px;
+        font-weight: 800;
+      }
+      .row .name { flex: 1; font-size: 13px; font-weight: 700; }
+      .row .meta { font-size: 11px; color: var(--muted); }
+      .foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px 10px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .foot button {
+        border: 0;
+        background: transparent;
+        color: var(--accent);
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin: 0 12px 10px;
+      }
+      .tabs button {
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 9px;
+        padding: 7px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .tabs button.on {
+        background: var(--ink);
+        color: #fffaf1;
+        border-color: var(--ink);
+      }
+      .notes {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+      }
+      .notes article {
+        background: #fffaf1;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .notes h3 { margin: 0 0 6px; font-size: 0.88rem; }
+      .notes p { margin: 0; color: var(--muted); font-size: 0.82rem; line-height: 1.55; }
+      .notes .rec { border-color: var(--accent); }
+      .empty {
+        margin: 0 12px 16px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .settings {
+        display: none;
+        margin: 0 12px 12px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px;
+        font-size: 12px;
+      }
+      .settings.on { display: block; }
+      .settings label { display: block; color: var(--muted); margin: 6px 0 4px; }
+      .watch {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .watch span {
+        background: #f7efe3;
+        border-radius: 99px;
+        padding: 3px 8px;
+      }
+      [data-scheme] { display: none; }
+      [data-scheme].show { display: block; }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="intro">
+        <div>
+          <h1>浏览器扩展弹窗原型</h1>
+          <p>工具栏图标点开，宽度 360px。图标角标默认显示「距周末天数」；当天若休假则显示「休」。</p>
+        </div>
+        <div class="scheme-switch" id="schemes">
+          <button type="button" data-to="a" class="on">A 今日快览</button>
+          <button type="button" data-to="b">B 双页签</button>
+          <button type="button" data-to="c">C 月历优先</button>
+        </div>
+      </div>
+
+      <div class="browser">
+        <div class="toolbar">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="omnibox">new tab</div>
+          <div class="ext-slot">
+            <button class="ext-icon" type="button" title="砖历">砖</button>
+            <span class="badge" id="iconBadge">4</span>
+          </div>
+        </div>
+        <div class="popup-wrap">
+          <div class="popup">
+            <div class="popup-head">
+              <b>砖历</b>
+              <span class="home-chip">主日历 · 中国</span>
+            </div>
+
+            <div data-scheme="a" class="show">
+              <div class="hero work" id="heroA">
+                <div class="k" id="heroDate">2026年8月18日 · 周二</div>
+                <div class="v" id="heroStatus">今天上班</div>
+                <div class="chips">
+                  <div class="chip"><small>距周末</small><b>4 天</b></div>
+                  <div class="chip"><small>距中秋节</small><b>38 天</b></div>
+                </div>
+              </div>
+              <div class="cal" id="calA"></div>
+              <div class="world">
+                <h2>当天还有 2 个国家在休假</h2>
+                <div class="row"><span class="flag">ID</span><span class="name">印度尼西亚</span><span class="meta">Independence Day</span></div>
+                <div class="row"><span class="flag">KR</span><span class="name">韩国</span><span class="meta">광복절</span></div>
+              </div>
+            </div>
+
+            <div data-scheme="b">
+              <div class="tabs" id="tabsB">
+                <button type="button" class="on" data-tab="cow">牛马</button>
+                <button type="button" data-tab="world">世界</button>
+              </div>
+              <div id="panelCow">
+                <div class="hero work">
+                  <div class="k">主日历 · 中国 · 当地时间</div>
+                  <div class="v">今天上班</div>
+                  <div class="chips">
+                    <div class="chip"><small>距周末</small><b>4 天</b></div>
+                    <div class="chip"><small>下一假</small><b>中秋 38 天</b></div>
+                  </div>
+                </div>
+                <div class="cal" id="calB"></div>
+              </div>
+              <div id="panelWorld" hidden>
+                <div class="world">
+                  <h2>2026-08-18 · 2 国休假</h2>
+                  <div class="row"><span class="flag">ID</span><span class="name">印度尼西亚</span><span class="meta">Independence Day</span></div>
+                  <div class="row"><span class="flag">KR</span><span class="name">韩国</span><span class="meta">광복절</span></div>
+                </div>
+                <p class="empty">关注国家可在设置里勾选，弹窗只显示关注列表。</p>
+              </div>
+            </div>
+
+            <div data-scheme="c">
+              <div class="cal" id="calC"></div>
+              <div class="hero work" style="margin-top:0">
+                <div class="k">点选日期后看状态</div>
+                <div class="v">8月18日上班</div>
+              </div>
+              <div class="world">
+                <h2>同日别国</h2>
+                <div class="row"><span class="flag">ID</span><span class="name">印度尼西亚</span><span class="meta">Independence Day</span></div>
+              </div>
+            </div>
+
+            <div class="settings" id="settings">
+              <label>主日历国家</label>
+              <div class="watch"><span>中国 CN</span></div>
+              <label>关注的别国（弹窗里优先显示）</label>
+              <div class="watch">
+                <span>日本</span><span>韩国</span><span>美国</span><span>印尼</span>
+              </div>
+            </div>
+            <div class="foot">
+              <span>数据 caldays · 仅供参考</span>
+              <button type="button" id="setBtn">设置</button>
+            </div>
+          </div>
+        </div>
+        <div class="page-fake">正在浏览的网页会衬在弹窗下面。弹窗关掉即走，不占标签。</div>
+      </div>
+
+      <div class="notes">
+        <article class="rec">
+          <h3>A 今日快览 · 推荐</h3>
+          <p>一屏看完：今天上不上班、距周末/下一假、月历、别国谁在休假。适合「点一下就走」。</p>
+        </article>
+        <article>
+          <h3>B 双页签</h3>
+          <p>牛马和世界拆开，信息更干净，但多一次点击。世界假日多的日期更合适。</p>
+        </article>
+        <article>
+          <h3>C 月历优先</h3>
+          <p>先翻日历再看状态，像系统日历。查调休/黄金周更顺，看「今天」稍慢一拍。</p>
+        </article>
+      </div>
+    </div>
+    <script>
+      var selected = "2026-08-18";
+      var cells = [
+        ["07-27", "27", 1, 0], ["07-28", "28", 1, 0], ["07-29", "29", 1, 0],
+        ["07-30", "30", 1, 0], ["07-31", "31", 1, 0], ["08-01", "1", 0, 1],
+        ["08-02", "2", 0, 1], ["08-03", "3", 0, 0], ["08-04", "4", 0, 0],
+        ["08-05", "5", 0, 0], ["08-06", "6", 0, 0], ["08-07", "7", 0, 0],
+        ["08-08", "8", 0, 1], ["08-09", "9", 0, 1], ["08-10", "10", 0, 0],
+        ["08-11", "11", 0, 0], ["08-12", "12", 0, 0], ["08-13", "13", 0, 0],
+        ["08-14", "14", 0, 0], ["08-15", "15", 0, 1], ["08-16", "16", 0, 1],
+        ["08-17", "17", 0, 0], ["08-18", "18", 0, 0], ["08-19", "19", 0, 0],
+        ["08-20", "20", 0, 0], ["08-21", "21", 0, 0], ["08-22", "22", 0, 1],
+        ["08-23", "23", 0, 1], ["08-24", "24", 0, 0], ["08-25", "25", 0, 0],
+        ["08-26", "26", 0, 0], ["08-27", "27", 0, 0], ["08-28", "28", 0, 0],
+        ["08-29", "29", 0, 1], ["08-30", "30", 0, 1], ["08-31", "31", 0, 0],
+        ["09-01", "1", 1, 0], ["09-02", "2", 1, 0], ["09-03", "3", 1, 0],
+        ["09-04", "4", 1, 0], ["09-05", "5", 1, 1], ["09-06", "6", 1, 1]
+      ];
+      var world = {
+        "2026-08-15": [["KR", "韩国", "광복절"], ["IN", "印度", "Independence Day"]],
+        "2026-08-17": [["CA", "加拿大", "Discovery Day"], ["CO", "哥伦比亚", "Asunción"]],
+        "2026-08-18": [["ID", "印度尼西亚", "Independence Day"], ["KR", "韩国", "광복절"]]
+      };
+
+      function renderCal(hostId) {
+        var host = document.getElementById(hostId);
+        if (!host) return;
+        var html = '<div class="cal-nav"><button type="button">‹</button><div class="t">2026年8月</div><button type="button">›</button></div>';
+        html += '<div class="grid">';
+        ["一","二","三","四","五","六","日"].forEach(function (d, i) {
+          html += '<div class="dow' + (i >= 5 ? " wk" : "") + '">' + d + "</div>";
+        });
+        cells.forEach(function (c) {
+          var iso = "2026-" + c[0];
+          var cls = "cell";
+          if (c[2]) cls += " out";
+          if (c[3]) cls += " wk";
+          if (iso === selected) cls += " on";
+          html += '<button class="' + cls + '" data-day="' + iso + '"><span class="n">' + c[1] + "</span></button>";
+        });
+        html += "</div>";
+        host.innerHTML = html;
+      }
+
+      function bindCals() {
+        document.querySelectorAll(".cal").forEach(function (cal) {
+          cal.onclick = function (e) {
+            var btn = e.target.closest("[data-day]");
+            if (!btn) return;
+            selected = btn.getAttribute("data-day");
+            renderCal("calA");
+            renderCal("calB");
+            renderCal("calC");
+            bindCals();
+          };
+        });
+      }
+
+      renderCal("calA");
+      renderCal("calB");
+      renderCal("calC");
+      bindCals();
+
+      document.getElementById("schemes").onclick = function (e) {
+        var btn = e.target.closest("[data-to]");
+        if (!btn) return;
+        document.querySelectorAll("#schemes button").forEach(function (b) { b.classList.toggle("on", b === btn); });
+        var id = btn.getAttribute("data-to");
+        document.querySelectorAll("[data-scheme]").forEach(function (el) {
+          el.classList.toggle("show", el.getAttribute("data-scheme") === id);
+        });
+      };
+
+      document.getElementById("tabsB").onclick = function (e) {
+        var btn = e.target.closest("[data-tab]");
+        if (!btn) return;
+        document.querySelectorAll("#tabsB button").forEach(function (b) { b.classList.toggle("on", b === btn); });
+        var tab = btn.getAttribute("data-tab");
+        document.getElementById("panelCow").hidden = tab !== "cow";
+        document.getElementById("panelWorld").hidden = tab !== "world";
+      };
+
+      document.getElementById("setBtn").onclick = function () {
+        document.getElementById("settings").classList.toggle("on");
+      };
+    </script>
+  </body>
+</html>

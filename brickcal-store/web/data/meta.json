@@ -1,0 +1,14 @@
+{
+  "year": 2026,
+  "updatedAt": "2026-09-02T00:33:26Z",
+  "source": "caldays",
+  "license": "CC BY 4.0",
+  "attribution": "Holiday data: caldays.com",
+  "stats": {
+    "countryCount": 206,
+    "holidayCount": 2648,
+    "failed": [],
+    "supplementCountries": 1,
+    "supplementRestDays": 22
+  }
+}

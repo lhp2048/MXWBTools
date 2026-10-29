@@ -1,0 +1,147 @@
+html {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body.options-page {
+  width: 420px;
+  min-height: 100%;
+  height: auto;
+  display: block;
+  padding-bottom: 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.options-page .popup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 12px 8px;
+}
+
+.options-page .popup-head b {
+  font-size: 0.95rem;
+}
+
+.options-page .hint {
+  margin: 0 12px 10px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.options-page .hint.tight {
+  margin: 8px 0 0;
+}
+
+.opt-block {
+  margin: 0 12px 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.opt-block label {
+  display: block;
+  margin: 8px 0 4px;
+  font-weight: 650;
+  font-size: 12px;
+}
+
+.opt-inline {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.opt-inline + .opt-inline {
+  margin-top: 10px;
+}
+
+.opt-block .opt-field {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.opt-block .opt-inline + label {
+  margin-top: 10px;
+}
+
+.opt-block input[type="time"],
+.opt-block input[type="number"],
+.opt-block input[type="text"],
+.opt-block select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-row input[type="color"] {
+  width: 48px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.color-preview {
+  margin-top: 8px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
+.options-page .watch {
+  max-height: 220px;
+}
+
+.clear-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.clear-row button {
+  border: 0;
+  background: var(--rest);
+  color: #fffaf1;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.clear-row button:hover {
+  background: #245a4c;
+}
+
+.clear-stat {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.save-msg {
+  margin: 0 12px;
+  font-size: 12px;
+  color: var(--rest);
+  font-weight: 700;
+}

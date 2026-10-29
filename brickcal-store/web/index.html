@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>今天谁在休假 · 砖历</title>
+    <style>
+      :root {
+        --bg: #efe7d8;
+        --ink: #241c14;
+        --muted: #6f6256;
+        --paper: #fffaf1;
+        --line: #e4d5c1;
+        --accent: #c45c26;
+        --accent-2: #2f6f5e;
+        --cal-w: 380px;
+        --cal-h: 620px;
+        --work-w: 300px;
+        --work-h: 620px;
+        --side-gap: 16px;
+        --side-top: 72px;
+        --card-w: 300px;
+        --card-h: 360px;
+        --card-gap: 12px;
+        --weekend: #d94b4b;
+      }
+      * { box-sizing: border-box; }
+      html, body { min-height: 100%; }
+      body {
+        margin: 0;
+        color: var(--ink);
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background:
+          radial-gradient(1200px 500px at 10% -10%, #f7d9b8 0%, transparent 55%),
+          radial-gradient(900px 400px at 100% 0%, #d9eadf 0%, transparent 50%),
+          var(--bg);
+      }
+      .page {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .hero {
+        flex: 0 0 auto;
+        padding: 18px 20px 12px;
+        text-align: center;
+      }
+      h1 { margin: 0; font-size: clamp(1.5rem, 2.4vw, 2.1rem); letter-spacing: 0.02em; }
+      #status, #meta { color: var(--muted); }
+      #status { margin: 0 0 10px; font-size: 0.98rem; text-align: center; }
+      .board {
+        flex: 1 1 auto;
+        width: 100%;
+        padding: 0 calc(var(--side-gap) + var(--work-w) + 14px) 0 calc(var(--side-gap) + var(--cal-w) + 14px);
+      }
+      .col-cal,
+      .col-work {
+        position: fixed;
+        top: var(--side-top);
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+      }
+      .col-cal {
+        left: var(--side-gap);
+        width: var(--cal-w);
+        height: var(--cal-h);
+      }
+      .col-work {
+        right: var(--side-gap);
+        width: var(--work-w);
+        height: var(--work-h);
+      }
+      .col-list {
+        min-width: 0;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #status {
+        width: var(--list-w, 100%);
+      }
+      #list {
+        width: var(--list-w, 100%);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, var(--card-w));
+        grid-auto-rows: minmax(var(--card-h), auto);
+        gap: var(--card-gap);
+        align-content: start;
+        justify-content: center;
+      }
+      .cal-panel {
+        flex: 1;
+        min-height: 0;
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .cal-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 12px 8px;
+      }
+      .cal-head button {
+        border: 1px solid var(--line);
+        background: #fff;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .cal-title { flex: 1; text-align: center; font-weight: 750; }
+      .cal-today {
+        border: 0 !important;
+        background: var(--accent) !important;
+        color: #fffaf1;
+        width: auto !important;
+        padding: 0 10px;
+        border-radius: 8px;
+      }
+      .cal-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        grid-template-rows: auto repeat(6, 1fr);
+        padding: 0 8px 8px;
+        min-height: 0;
+      }
+      .cal-dow {
+        text-align: center;
+        font-size: 0.78rem;
+        color: var(--muted);
+        padding: 6px 0;
+      }
+      .cal-dow.wk { color: var(--weekend); }
+      .cal-cell {
+        border: 0;
+        background: transparent;
+        border-radius: 10px;
+        padding: 4px 2px;
+        cursor: pointer;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+      }
+      .cal-cell .n { font-size: 1.05rem; font-weight: 650; }
+      .cal-cell .sub {
+        font-size: 0.68rem;
+        color: var(--muted);
+        line-height: 1.1;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .cal-cell.out { opacity: 0.38; }
+      .cal-cell.wk .n, .cal-cell.wk .sub { color: var(--weekend); }
+      .cal-cell.fest .sub { color: var(--accent); font-weight: 700; }
+      .cal-cell.term .sub { color: var(--accent-2); font-weight: 700; }
+      .cal-cell.lunar .sub { color: #8a7b6d; }
+      .cal-cell.selected {
+        box-shadow: inset 0 0 0 2px #4c8dff;
+      }
+      .cal-foot {
+        background: #ececec;
+        color: #555;
+        font-size: 0.82rem;
+        padding: 8px 12px;
+      }
+      .work-panel {
+        --work-top: #ff8a2b;
+        --work-mid: #ff6a1f;
+        --work-bottom: #f04d18;
+        flex: 1;
+        min-height: 0;
+        border-radius: 16px;
+        background: linear-gradient(
+          180deg,
+          var(--work-top) 0%,
+          var(--work-mid) 42%,
+          var(--work-bottom) 100%
+        );
+        color: #fff;
+        padding: 16px 14px 14px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 12px 28px rgba(200, 70, 20, 0.25);
+        transition: background 0.8s ease;
+      }
+      .work-slogan {
+        margin: 0;
+        font-size: 0.92rem;
+        font-weight: 700;
+        line-height: 1.45;
+        min-height: 2.7em;
+      }
+      .work-slogan.swap {
+        animation: quote-swap 0.45s ease;
+      }
+      .work-ring-wrap {
+        flex: 1;
+        display: grid;
+        place-items: center;
+        min-height: 160px;
+      }
+      .work-overtime {
+        --over-pct: 0%;
+        position: relative;
+        width: 246px;
+        height: 246px;
+        display: grid;
+        place-items: center;
+        background: transparent;
+      }
+      .work-over-svg,
+      .work-ring-svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        pointer-events: none;
+        shape-rendering: geometricPrecision;
+      }
+      .work-over-track,
+      .work-over-progress {
+        fill: none;
+        stroke-width: 18;
+        stroke-linecap: butt;
+      }
+      .work-over-track { stroke: transparent; }
+      .work-overtime.on .work-over-track { stroke: rgba(40, 6, 4, 0.32); }
+      .work-over-progress { stroke: #8a120c; }
+      .work-ring {
+        --work-core-top: #ff7a24;
+        --work-core-bottom: #ff5c16;
+        position: relative;
+        width: 210px;
+        height: 210px;
+        display: grid;
+        place-items: center;
+        background: transparent;
+      }
+      .work-ring-track,
+      .work-ring-progress {
+        fill: none;
+        stroke-width: 21;
+        stroke-linecap: butt;
+      }
+      .work-ring-track { stroke: rgba(255,255,255,0.22); }
+      .work-ring-progress { stroke: #fff; }
+      .work-ring-core {
+        width: 168px;
+        height: 168px;
+        border-radius: 50%;
+        background: linear-gradient(180deg, var(--work-core-top), var(--work-core-bottom));
+        display: grid;
+        place-items: center;
+        text-align: center;
+        transition: background 0.8s ease;
+      }
+      .work-ring small { display: block; opacity: 0.92; font-size: 0.8rem; }
+      .work-ring b {
+        display: block;
+        margin-top: 6px;
+        font-size: 1.7rem;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.04em;
+      }
+      .work-art { height: 72px; display: grid; place-items: center; overflow: visible; }
+      .work-art svg { overflow: visible; }
+      .work-art .work-mover,
+      .work-art .work-cart,
+      .work-art .brick {
+        transform-box: fill-box;
+      }
+      .work-art .work-mover {
+        transform-origin: 28px 54px;
+        animation: work-push 1.2s ease-in-out infinite;
+      }
+      .work-art .work-cart {
+        transform-origin: left center;
+        animation: work-cart 1.2s ease-in-out infinite;
+      }
+      .work-art .brick {
+        transform-origin: center bottom;
+        animation: work-brick 4.8s ease-in-out infinite;
+      }
+      .work-art .brick:nth-child(1) { animation-delay: 0s; }
+      .work-art .brick:nth-child(2) { animation-delay: 0.28s; }
+      .work-art .brick:nth-child(3) { animation-delay: 0.56s; }
+      .work-art .brick:nth-child(4) { animation-delay: 0.84s; }
+      @keyframes work-push {
+        0%, 100% { transform: translateX(0) rotate(0deg); }
+        35% { transform: translateX(4px) rotate(6deg); }
+        55% { transform: translateX(1px) rotate(1deg); }
+      }
+      @keyframes work-cart {
+        0%, 100% { transform: translateX(0); }
+        40% { transform: translateX(5px); }
+        60% { transform: translateX(2px); }
+      }
+      @keyframes work-brick {
+        0%, 8% { transform: scaleY(0); opacity: 0.15; }
+        18%, 72% { transform: scaleY(1); opacity: 1; }
+        88%, 100% { transform: scaleY(0); opacity: 0.15; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .work-art .work-mover,
+        .work-art .work-cart,
+        .work-art .brick,
+        .work-quote.swap,
+        .work-slogan.swap { animation: none; }
+      }
+      .work-quote {
+        margin: 8px 0 0;
+        background: rgba(90, 20, 0, 0.28);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 0.82rem;
+        line-height: 1.5;
+        min-height: 3.2em;
+      }
+      .work-quote.swap {
+        animation: quote-swap 0.45s ease;
+      }
+      @keyframes quote-swap {
+        from { opacity: 0.2; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .card {
+        width: var(--card-w);
+        min-height: var(--card-h);
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 14px;
+        box-shadow: 0 10px 24px rgba(70, 42, 20, 0.06);
+      }
+      .card-head { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+      .flag {
+        width: 48px; height: 48px; border-radius: 14px;
+        display: grid; place-items: center;
+        background: #f3e6d4; font-size: 28px;
+      }
+      .card-head h2 { margin: 0; font-size: 1.2rem; }
+      .en { margin: 2px 0 0; color: var(--muted); font-size: 0.86rem; }
+      .facts {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px 12px;
+        margin: 0 0 12px;
+      }
+      .facts div:last-child { grid-column: 1 / -1; }
+      dt { color: var(--muted); font-size: 0.75rem; }
+      dd { margin: 2px 0 0; font-weight: 650; }
+      .local-clock { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+      .span-block {
+        background: #f7efe3;
+        border-radius: 12px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+      }
+      .span-title { font-size: 0.75rem; color: var(--muted); margin-bottom: 6px; }
+      .span-range { font-weight: 700; margin-bottom: 8px; }
+      .span-range span { color: var(--accent); padding: 0 6px; }
+      .meter {
+        height: 8px; background: #e7d7c3; border-radius: 99px; overflow: hidden;
+      }
+      .meter i {
+        display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #e08a3c);
+      }
+      .span-meta { margin-top: 8px; color: var(--muted); font-size: 0.86rem; }
+      .span-meta b { color: var(--ink); }
+      .holiday-list { list-style: none; padding: 0; margin: 0; }
+      .holiday-list li {
+        display: flex; justify-content: space-between; gap: 8px; align-items: center;
+        padding: 7px 0; border-bottom: 1px dashed var(--line);
+        font-size: 0.9rem;
+      }
+      .holiday-list li:last-child { border-bottom: 0; }
+      .chip-date { color: var(--muted); }
+      .chip-name { font-weight: 650; color: var(--accent-2); }
+      .chip-reason {
+        flex: 0 0 auto;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #fffaf1;
+        background: var(--accent);
+        border-radius: 999px;
+        padding: 2px 8px;
+      }
+      .empty-holidays { margin: 0; color: var(--muted); font-size: 0.88rem; }
+      .site-foot {
+        flex: 0 0 auto;
+        padding: 14px calc(var(--side-gap) + var(--work-w) + 14px) 16px calc(var(--side-gap) + var(--cal-w) + 14px);
+        font-size: 0.82rem;
+        line-height: 1.6;
+        color: var(--muted);
+        text-align: center;
+      }
+      .site-foot b { color: var(--ink); }
+      @media (max-width: 1080px) {
+        .col-cal, .col-work {
+          position: static;
+          width: 100%;
+          height: var(--cal-h);
+        }
+        .board, .site-foot {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <h1>哪些国家在休假</h1>
+        <input id="queryDate" type="date" hidden />
+      </header>
+      <div class="board">
+        <aside class="col-cal">
+          <div class="cal-panel">
+            <div class="cal-head">
+              <button id="calPrev" type="button" aria-label="上一月">‹</button>
+              <div class="cal-title" id="calTitle">—</div>
+              <button id="calNext" type="button" aria-label="下一月">›</button>
+              <button id="todayBtn" class="cal-today" type="button">今</button>
+            </div>
+            <div class="cal-grid" id="calGrid"></div>
+            <div class="cal-foot" id="calFoot">—</div>
+          </div>
+        </aside>
+        <section class="col-list">
+          <p id="status">正在读取假期数据…</p>
+          <div id="list"></div>
+        </section>
+        <aside class="col-work">
+          <div class="work-panel">
+            <p class="work-slogan" id="workSlogan">努力奋斗，为公司创造价值</p>
+            <div class="work-ring-wrap">
+              <div class="work-overtime" id="workOvertime">
+                <svg class="work-over-svg" viewBox="0 0 246 246" aria-hidden="true">
+                  <circle class="work-over-track" cx="123" cy="123" r="114" />
+                  <circle class="work-over-progress" id="workOverArc" cx="123" cy="123" r="114" transform="rotate(-90 123 123)" stroke-dasharray="0 717" />
+                </svg>
+                <div class="work-ring" id="workRing">
+                  <svg class="work-ring-svg" viewBox="0 0 210 210" aria-hidden="true">
+                    <circle class="work-ring-track" cx="105" cy="105" r="94.5" />
+                    <circle class="work-ring-progress" id="workRingArc" cx="105" cy="105" r="94.5" transform="rotate(-90 105 105)" stroke-dasharray="0 594" />
+                  </svg>
+                  <div class="work-ring-core">
+                    <small>已搬砖时长</small>
+                    <b id="workTimer">00:00:00</b>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="work-art" aria-hidden="true">
+              <svg width="220" height="64" viewBox="0 0 220 64" fill="none">
+                <g class="work-mover">
+                  <circle cx="28" cy="14" r="7" stroke="#fff" stroke-width="2"/>
+                  <path d="M28 22v16M28 28h16M24 54l4-16 8 16" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                </g>
+                <g class="work-cart">
+                  <rect x="52" y="34" width="54" height="18" rx="3" stroke="#fff" stroke-width="2"/>
+                  <text x="62" y="47" fill="#fff" font-size="11">搬砖</text>
+                  <path d="M106 43h18" stroke="#fff" stroke-width="2"/>
+                </g>
+                <g class="work-stack">
+                  <rect class="brick" x="128" y="40" width="18" height="12" fill="#fff"/>
+                  <rect class="brick" x="140" y="30" width="18" height="22" fill="#fff" opacity="0.85"/>
+                  <rect class="brick" x="152" y="22" width="18" height="30" fill="#fff" opacity="0.7"/>
+                  <rect class="brick" x="164" y="14" width="18" height="38" fill="#fff" opacity="0.55"/>
+                </g>
+              </svg>
+            </div>
+            <p class="work-quote" id="workQuote">老板说“格局打开”，意思是少要钱多干活。</p>
+          </div>
+        </aside>
+      </div>
+      <footer class="site-foot" id="meta"></footer>
+    </div>
+    <script src="./zh-names.js"></script>
+    <script src="./holiday.js"></script>
+    <script src="./work-copy.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
