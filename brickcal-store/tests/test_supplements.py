@@ -100,6 +100,30 @@ class SupplementMergeTests(unittest.TestCase):
         )
         self.assertEqual(count, 4)
 
+    def test_two_years_keep_both_rest_and_workdays(self):
+        current = parse_holiday_cn(HOLIDAY_CN_SAMPLE, "https://example.test/2026.json")
+        nxt = parse_holiday_cn(
+            {
+                "year": 2027,
+                "papers": ["https://www.gov.cn/2027"],
+                "days": [
+                    {"name": "元旦", "date": "2027-01-01", "isOffDay": True},
+                    {"name": "元旦", "date": "2027-01-02", "isOffDay": True},
+                    {"name": "春节", "date": "2027-01-31", "isOffDay": False},
+                ],
+            },
+            "https://example.test/2027.json",
+        )
+        merged = apply_supplements(_caldays_cn(), [current, nxt])
+        self.assertEqual(
+            merged["countries"]["CN"]["workdays"],
+            ["2026-09-20", "2026-10-10", "2027-01-31"],
+        )
+        extra = [item for item in merged["byDate"]["2027-01-02"] if item["code"] == "CN"][0]
+        self.assertEqual(extra["kind"], "adjusted")
+        self.assertEqual(merged["supplements"]["CN"]["years"], [2026, 2027])
+        self.assertEqual(rest_span_on_date(merged, "CN", "2026-10-01")["end"], "2026-10-07")
+
 
 class SupplementJobTests(unittest.TestCase):
     def test_update_fetches_and_writes_overlay(self):
@@ -111,9 +135,14 @@ class SupplementJobTests(unittest.TestCase):
                 {"countries": [{"code": "CN", "source": "holiday-cn", "enabled": True}]}
             )
 
+            fetched = []
+
             def fake_fetch(source, code, year, http_get):
                 self.assertEqual(source, "holiday-cn")
                 self.assertEqual(code, "CN")
+                fetched.append(year)
+                if int(year) != 2026:
+                    raise RuntimeError("not published")
                 overlay = parse_holiday_cn(HOLIDAY_CN_SAMPLE, "https://example.test/2026.json")
                 overlay["year"] = year
                 return overlay
@@ -127,8 +156,9 @@ class SupplementJobTests(unittest.TestCase):
             )
             span = rest_span_on_date(merged, "CN", "2026-10-05")
             self.assertEqual(span["days"], 7)
-            overlay_path = cache_dir / "supplements" / "CN.json"
-            self.assertTrue(overlay_path.is_file())
+            self.assertEqual(fetched, [2026, 2027])
+            self.assertTrue((cache_dir / "supplements" / "CN-2026.json").is_file())
+            self.assertFalse((cache_dir / "supplements" / "CN-2027.json").is_file())
 
     def test_caldays_ingest_reapplies_saved_overlay(self):
         class FakeClient:

@@ -13,6 +13,11 @@ def fetch_overlay(source, code, year, http_get):
     raise ValueError("未知数据源：%s" % source)
 
 
+def supplement_years(year):
+    year = int(year)
+    return [year, year + 1]
+
+
 def apply_saved_supplements(payload, cache_dir, updated_at=None):
     overlays = SupplementStore(cache_dir).read_overlays()
     if not overlays:
@@ -36,30 +41,39 @@ def run_supplement_update(
     payload = cache.read_payload()
     if payload is None:
         raise RuntimeError("还没有 caldays 数据，请先手动获取一次公共假")
+    try:
+        years = supplement_years(payload.get("year"))
+    except (TypeError, ValueError):
+        raise RuntimeError("缓存里没有年份，请先手动获取一次公共假")
 
     store = SupplementStore(cache_dir)
-    overlays = []
     for entry in store.read_registry()["countries"]:
         if not entry.get("enabled"):
             log("[INFO] skip disabled %s" % entry.get("code"))
             continue
         code = entry["code"]
         source = entry["source"]
-        log("[INFO] fetching %s from %s" % (code, source))
-        overlay = fetch_overlay_fn(source, code, payload.get("year"), http_get)
-        overlay["updatedAt"] = now
-        store.write_overlay(overlay)
-        overlays.append(overlay)
-        log(
-            "[OK] %s rest=%s workdays=%s"
-            % (
-                code,
-                len(overlay.get("restDays") or []),
-                len(overlay.get("workdays") or []),
+        for year in years:
+            log("[INFO] fetching %s %s from %s" % (code, year, source))
+            try:
+                overlay = fetch_overlay_fn(source, code, year, http_get)
+            except Exception as exc:
+                log("[WARN] %s %s: %s" % (code, year, exc))
+                continue
+            overlay["year"] = overlay.get("year") or year
+            overlay["updatedAt"] = now
+            store.write_overlay(overlay)
+            log(
+                "[OK] %s %s rest=%s workdays=%s"
+                % (
+                    code,
+                    overlay.get("year"),
+                    len(overlay.get("restDays") or []),
+                    len(overlay.get("workdays") or []),
+                )
             )
-        )
 
-    merged = apply_supplements(payload, overlays, updated_at=now)
+    merged = apply_saved_supplements(payload, cache_dir, updated_at=now)
     cache.write_payload(merged)
     stats = merged.get("stats") or {}
     log(

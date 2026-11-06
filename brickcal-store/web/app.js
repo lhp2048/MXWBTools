@@ -66,8 +66,9 @@ function renderCalendar(payload, selectedIso) {
       label +
       "</div>";
   });
+  const workdays = ((((payload && payload.countries) || {}).CN || {}).workdays) || [];
   monthCells(calendarView.year, calendarView.month, 0).forEach(function (cell) {
-    const mark = cnDayMark(payload, cell.iso, false);
+    const mark = cnDayMark(payload, cell.iso, workdays.indexOf(cell.iso) >= 0);
     const cls = [
       "cal-cell",
       cell.inMonth ? "" : "out",
@@ -277,6 +278,7 @@ function renderPage(payload, dateStr) {
             escapeHtml(code) +
             "</b> " +
             escapeHtml(item.source || "") +
+            (item.years && item.years.length ? " " + item.years.join("/") : "") +
             "（+" +
             (item.extraRestDays || 0) +
             " 天）"

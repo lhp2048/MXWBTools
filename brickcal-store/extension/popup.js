@@ -311,10 +311,10 @@ function renderWorld() {
 
 function renderYearNote() {
   const note = document.getElementById("yearNote");
-  const localYear = parseDay(homeDay(state.payload, state.homeCountry)).getUTCFullYear();
-  const dataYear = state.payload && state.payload.year;
-  if (dataYear && dataYear !== localYear) {
-    note.textContent = "数据为 " + dataYear + " 年";
+  const year = holidayYear();
+  const covered = coveredHolidayYears(state.payload, state.homeCountry);
+  if (year && covered.indexOf(year) < 0) {
+    note.textContent = "没有 " + year + " 年的假期数据";
     note.hidden = false;
   } else {
     note.textContent = "";
@@ -323,6 +323,9 @@ function renderYearNote() {
 }
 
 function holidayYear() {
+  if (state.viewYear) {
+    return state.viewYear;
+  }
   if (state.payload && state.payload.year) {
     return state.payload.year;
   }
@@ -368,7 +371,7 @@ function renderRestMenu() {
   }
   const items = yearHolidayList(state.payload, state.homeCountry, holidayYear());
   if (!items.length) {
-    menu.innerHTML = '<p class="empty">今年没有可查的休假</p>';
+    menu.innerHTML = '<p class="empty">' + holidayYear() + " 年没有可查的休假</p>";
     return;
   }
   menu.innerHTML = items

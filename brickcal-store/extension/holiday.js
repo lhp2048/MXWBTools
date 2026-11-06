@@ -524,6 +524,36 @@ function holidayRangeLabel(start, end) {
   return aM + "月" + aD + "日–" + bM + "月" + bD + "日";
 }
 
+function coveredHolidayYears(payload, code) {
+  const found = {};
+  function add(iso, itemCode) {
+    if (code && itemCode && itemCode !== code) {
+      return;
+    }
+    const year = parseInt(String(iso || "").slice(0, 4), 10);
+    if (year) {
+      found[year] = true;
+    }
+  }
+  const byDate = (payload && payload.byDate) || {};
+  Object.keys(byDate).forEach(function (iso) {
+    (byDate[iso] || []).forEach(function (item) {
+      add(iso, item && item.code);
+    });
+  });
+  const info = ((payload && payload.countries) || {})[code || ""] || {};
+  (info.workdays || []).forEach(function (iso) {
+    add(iso, code);
+  });
+  return Object.keys(found)
+    .map(function (year) {
+      return Number(year);
+    })
+    .sort(function (a, b) {
+      return a - b;
+    });
+}
+
 function yearHolidayList(payload, code, year) {
   code = code || "CN";
   if (year == null && payload && payload.year) {
@@ -794,6 +824,7 @@ if (typeof module !== "undefined" && module.exports) {
     weekLabels: weekLabels,
     isWeekHeaderWeekend: isWeekHeaderWeekend,
     holidayRangeLabel: holidayRangeLabel,
+    coveredHolidayYears: coveredHolidayYears,
     yearHolidayList: yearHolidayList,
     nextHolidayAfter: nextHolidayAfter,
     nextHolidaysAfter: nextHolidaysAfter,

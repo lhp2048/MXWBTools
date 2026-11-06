@@ -36,6 +36,7 @@ const {
   normalizeWeekStart,
   normalizeMonthSwitch,
   yearHolidayList,
+  coveredHolidayYears,
   holidayRangeLabel,
 } = require(path.join(__dirname, "..", "web", "app.js"));
 
@@ -214,6 +215,19 @@ assert.strictEqual(cnSolarTermName("2026-02-04"), "立春");
 assert.strictEqual(cnTraditionalName("2026-03-03"), "元宵节");
 assert.strictEqual(cnTraditionalName("2026-08-19"), "七夕");
 assert.strictEqual(cnTraditionalName("2026-09-10"), "教师节");
+const multiYear = {
+  year: 2026,
+  countries: { CN: { name: "China", workdays: ["2027-01-31"] } },
+  byDate: {
+    "2026-10-01": [{ code: "CN", name: "国庆节" }],
+    "2027-01-01": [{ code: "CN", name: "元旦", kind: "adjusted" }],
+  },
+};
+assert.deepStrictEqual(coveredHolidayYears(multiYear, "CN"), [2026, 2027]);
+assert.strictEqual(yearHolidayList(multiYear, "CN", 2027)[0].name, "元旦");
+assert.ok(yearHolidayList(multiYear, "CN", 2026).every(function (item) {
+  return item.date.indexOf("2026") === 0;
+}));
 assert.strictEqual(cnDayMark(restPayload, "2026-10-01", false).text, "国庆节");
 assert.strictEqual(cnDayMark(restPayload, "2026-10-01", true).text, "班");
 assert.strictEqual(cnDayMark({}, "2026-04-05", false).kind, "term");

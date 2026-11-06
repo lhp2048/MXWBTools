@@ -221,18 +221,17 @@ def _admin_status(store, ingest_runner):
     overlays = {}
     for item in registry.get("countries") or []:
         code = item.get("code")
-        overlay = {}
-        path = supplements.overlay_path(code)
-        if path.is_file():
-            overlay = json.loads(path.read_text(encoding="utf-8"))
+        loaded = supplements.read_overlays([item])
+        updated = [entry.get("updatedAt") for entry in loaded if entry.get("updatedAt")]
         applied = ((payload or {}).get("supplements") or {}).get(code) or {}
         overlays[code] = {
             "source": item.get("source"),
             "enabled": item.get("enabled"),
-            "fetchedAt": overlay.get("updatedAt"),
+            "fetchedAt": max(updated) if updated else None,
+            "years": [entry.get("year") for entry in loaded if entry.get("year") is not None],
             "applied": applied,
-            "restDays": len(overlay.get("restDays") or []),
-            "workdays": len(overlay.get("workdays") or []),
+            "restDays": sum(len(entry.get("restDays") or []) for entry in loaded),
+            "workdays": sum(len(entry.get("workdays") or []) for entry in loaded),
         }
     return {
         "ingest": ingest,

@@ -19,8 +19,11 @@ class SupplementStore:
     def registry_path(self):
         return self.root / "registry.json"
 
-    def overlay_path(self, code):
-        return self.root / ("%s.json" % str(code).strip().upper())
+    def overlay_path(self, code, year=None):
+        code = str(code).strip().upper()
+        if year:
+            return self.root / ("%s-%s.json" % (code, int(year)))
+        return self.root / ("%s.json" % code)
 
     def read_registry(self):
         path = self.registry_path()
@@ -84,16 +87,22 @@ class SupplementStore:
         registry["countries"] = [
             item for item in registry["countries"] if item["code"] != code
         ]
-        overlay = self.overlay_path(code)
-        if overlay.is_file():
-            overlay.unlink()
+        legacy = self.overlay_path(code)
+        if legacy.is_file():
+            legacy.unlink()
+        for path in self.root.glob("%s-*.json" % code):
+            path.unlink()
         return self.write_registry(registry)
 
     def write_overlay(self, overlay):
         code = str((overlay or {}).get("code") or "").strip().upper()
         if not code:
             raise ValueError("overlay missing code")
-        self._atomic_write(self.overlay_path(code), overlay)
+        year = (overlay or {}).get("year")
+        path = self.overlay_path(code, year if year else None)
+        self._atomic_write(path, overlay)
+        if year:
+            self._drop_legacy_if_same_year(code, year)
         return overlay
 
     def read_overlays(self, entries=None):
@@ -103,11 +112,42 @@ class SupplementStore:
             ]
         overlays = []
         for item in entries:
-            path = self.overlay_path(item.get("code"))
-            if not path.is_file():
-                continue
-            overlays.append(json.loads(path.read_text(encoding="utf-8")))
+            overlays.extend(self._read_country_overlays(item.get("code")))
         return overlays
+
+    def _read_country_overlays(self, code):
+        code = str(code or "").strip().upper()
+        if not code:
+            return []
+        loaded = []
+        years = set()
+        paths = sorted(self.root.glob("%s-*.json" % code))
+        for path in paths:
+            overlay = json.loads(path.read_text(encoding="utf-8"))
+            year = overlay.get("year")
+            if year is not None:
+                years.add(int(year))
+            loaded.append(overlay)
+        legacy = self.overlay_path(code)
+        if legacy.is_file():
+            overlay = json.loads(legacy.read_text(encoding="utf-8"))
+            year = overlay.get("year")
+            if year is None or int(year) not in years:
+                loaded.append(overlay)
+        loaded.sort(key=lambda item: int(item.get("year") or 0))
+        return loaded
+
+    def _drop_legacy_if_same_year(self, code, year):
+        legacy = self.overlay_path(code)
+        if not legacy.is_file():
+            return
+        try:
+            old = json.loads(legacy.read_text(encoding="utf-8"))
+        except ValueError:
+            return
+        old_year = old.get("year")
+        if old_year is None or int(old_year) == int(year):
+            legacy.unlink()
 
     def _atomic_write(self, path, data):
         path.parent.mkdir(parents=True, exist_ok=True)

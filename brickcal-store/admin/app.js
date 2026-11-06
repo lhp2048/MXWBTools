@@ -181,13 +181,15 @@ function fillSupplementTable(tbody, rows, overlays) {
   rows.forEach(function (item) {
     const overlay = overlays[item.code] || {};
     const applied = overlay.applied || {};
+    const years = (applied.years && applied.years.length ? applied.years : overlay.years) || [];
     const status = overlay.fetchedAt
-      ? "已拉取 " +
+      ? (years.length ? years.join("、") + " 年 · " : "") +
+        "已拉取 " +
         overlay.fetchedAt +
         " · 补放假 +" +
         (applied.extraRestDays || overlay.restDays || 0) +
         " · 补班 " +
-        (overlay.workdays || 0)
+        (applied.workdays || overlay.workdays || 0)
       : "尚未拉取";
     const tr = document.createElement("tr");
     tr.innerHTML =

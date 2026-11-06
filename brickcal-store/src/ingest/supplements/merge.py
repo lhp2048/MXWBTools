@@ -36,14 +36,14 @@ def apply_supplements(payload, overlays, updated_at=None):
         if not code or code not in countries:
             continue
         existing = _dates_for(by_date, code)
-        workdays = sorted(
-            {
-                str(item.get("date") or "").strip()
-                for item in (overlay.get("workdays") or [])
-                if item.get("date")
-            }
-        )
-        countries[code]["workdays"] = workdays
+        incoming = {
+            str(item.get("date") or "").strip()
+            for item in (overlay.get("workdays") or [])
+            if item.get("date")
+        }
+        prior = set(countries[code].get("workdays") or [])
+        prior.update(date for date in incoming if date)
+        countries[code]["workdays"] = sorted(prior)
         added = 0
         for item in overlay.get("restDays") or []:
             date = str(item.get("date") or "").strip()
@@ -61,14 +61,29 @@ def apply_supplements(payload, overlays, updated_at=None):
             existing.add(date)
             added += 1
         extra_count += added
-        supplements[code] = {
-            "source": overlay.get("source"),
-            "sourceUrl": overlay.get("sourceUrl"),
-            "updatedAt": overlay.get("updatedAt") or updated_at,
-            "papers": list(overlay.get("papers") or []),
-            "extraRestDays": added,
-            "workdays": len(workdays),
-        }
+        slot = supplements.get(code)
+        if slot is None:
+            slot = {
+                "source": overlay.get("source"),
+                "sourceUrl": overlay.get("sourceUrl"),
+                "updatedAt": overlay.get("updatedAt") or updated_at,
+                "papers": [],
+                "years": [],
+                "extraRestDays": 0,
+                "workdays": 0,
+            }
+            supplements[code] = slot
+        year = overlay.get("year")
+        if year is not None and year not in slot["years"]:
+            slot["years"].append(year)
+        for paper in overlay.get("papers") or []:
+            if paper not in slot["papers"]:
+                slot["papers"].append(paper)
+        if overlay.get("sourceUrl"):
+            slot["sourceUrl"] = overlay.get("sourceUrl")
+        slot["updatedAt"] = overlay.get("updatedAt") or slot.get("updatedAt") or updated_at
+        slot["extraRestDays"] += added
+        slot["workdays"] = len(countries[code]["workdays"])
 
     payload["byDate"] = dict(sorted(by_date.items()))
     if supplements:

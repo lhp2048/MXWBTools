@@ -6,9 +6,9 @@
   "attribution": "Holiday data: caldays.com",
   "stats": {
     "countryCount": 206,
-    "holidayCount": 2648,
+    "holidayCount": 2677,
     "failed": [],
     "supplementCountries": 1,
-    "supplementRestDays": 22
+    "supplementRestDays": 51
   }
 }
